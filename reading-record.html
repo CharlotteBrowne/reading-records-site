@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>阅读记录</title>
+    <meta name="description" content="Personal reading archive." />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body class="reading-page">
+    <header class="site-header compact-header">
+      <div class="brand-wrap">
+        <div class="brand-mark">L</div>
+        <div>
+          <div class="brand-name">Lina</div>
+          <div class="brand-subtitle">Reading Archive</div>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="index.html">首页</a>
+        <a href="reading-record.html" class="active">阅读记录</a>
+        <a href="pages/photography.html">摄影</a>
+        <a href="pages/travel.html">旅行</a>
+        <a href="pages/notes.html">随笔</a>
+      </nav>
+    </header>
+
+    <main class="reading-shell">
+      <aside class="year-panel" aria-label="Year selection">
+        <div id="yearList" class="year-list"></div>
+      </aside>
+
+      <section class="reading-content">
+        <div class="reading-header">
+          <h1 id="yearTitle">2014 阅读清单</h1>
+          <div class="reading-actions">
+            <button id="addBookBtn" class="button primary">+ 新增</button>
+            <button id="exportBtn" class="button ghost">导出 JSON</button>
+            <label class="button ghost import-btn">
+              导入 JSON
+              <input id="importInput" type="file" accept="application/json" hidden />
+            </label>
+          </div>
+        </div>
+
+        <div class="month-bar" id="monthList"></div>
+
+        <section class="book-grid" id="bookGrid" aria-live="polite"></section>
+      </section>
+    </main>
+
+    <div id="bookModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close="true"></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+          <h2 id="modalTitle">新增书籍</h2>
+          <button class="close-button" type="button" data-close="true" aria-label="关闭">×</button>
+        </div>
+
+        <form id="bookForm">
+          <div class="form-grid">
+            <label>
+              书名
+              <input type="text" name="title" required />
+            </label>
+            <label>
+              作者
+              <input type="text" name="author" required />
+            </label>
+            <label>
+              阅读日期
+              <input type="date" name="date" required />
+            </label>
+            <label>
+              评分
+              <input type="number" name="rating" min="0" max="5" step="0.5" value="4" required />
+            </label>
+          </div>
+
+          <label>
+            读书笔记
+            <textarea name="notes" rows="5" required></textarea>
+          </label>
+
+          <div class="modal-actions">
+            <button type="button" class="button ghost" data-close="true">取消</button>
+            <button type="submit" class="button primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="assets/js/reading-app.js"></script>
+  </body>
+</html>

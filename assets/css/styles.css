@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>随笔</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="notes-page">
+    <header class="site-header compact-header">
+      <div class="brand-wrap">
+        <div class="brand-mark">L</div>
+        <div>
+          <div class="brand-name">Lina</div>
+          <div class="brand-subtitle">Essays & Notes</div>
+        </div>
+      </div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html">首页</a>
+        <a href="../reading-record.html">阅读记录</a>
+        <a href="photography.html">摄影</a>
+        <a href="travel.html">旅行</a>
+        <a href="notes.html" class="active">随笔</a>
+      </nav>
+    </header>
+
+    <main class="content-page">
+      <div class="page-head">
+        <p class="eyebrow">文字留痕</p>
+        <h1>随笔</h1>
+      </div>
+
+      <section class="note-list">
+        <article class="note-item">
+          <span class="note-date">2024.09.12</span>
+          <h3>关于慢节奏的日子</h3>
+          <p>我开始理解，真正的自由并不是不停地前进，而是在清醒时愿意放慢脚步，留意细小而真实的东西。</p>
+        </article>
+        <article class="note-item">
+          <span class="note-date">2024.11.06</span>
+          <h3>夏天的光，仍在心底</h3>
+          <p>我们以为看见太多，实际上只是熟练地忽略了那些原本最容易让人安住的瞬间。</p>
+        </article>
+        <article class="note-item">
+          <span class="note-date">2025.01.10</span>
+          <h3>一只书桌上的日记</h3>
+          <p>有时，写下一句话就够了。它不是为了留下什么，而是为了让心在长久的浮动里有一个落脚的地方。</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
