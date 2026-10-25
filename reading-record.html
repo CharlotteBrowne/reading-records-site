@@ -4,31 +4,43 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>阅读记录</title>
-    <meta name="description" content="个人阅读记录与书单管理" />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body class="reading-page">
-    <div class="reading-layout">
-      <aside class="year-panel" aria-label="月份导航">
-        <div class="year-panel-inner" id="yearList"></div>
-      </aside>
+    <div class="page-shell reading-shell">
+      <header class="topbar reading-topbar">
+        <div class="brand-box">
+          <div class="brand-mark">L</div>
+          <div class="brand-copy">
+            <div class="brand-name">Lina</div>
+            <div class="brand-role">Reading Archive</div>
+          </div>
+        </div>
+
+        <nav class="topnav" aria-label="书页导航">
+          <a href="index.html">首页</a>
+          <a href="reading-record.html" class="active">阅读记录</a>
+          <a href="pages/photography.html">摄影</a>
+          <a href="pages/travel.html">旅行</a>
+          <a href="pages/notes.html">随笔</a>
+        </nav>
+      </header>
 
       <main class="reading-main">
-        <div class="reading-header-row">
+        <div class="reading-header row-between">
           <h1 id="yearTitle">2014 阅读清单</h1>
           <div class="reading-actions">
-            <button id="addBookBtn" class="button primary" type="button">+ 新增</button>
-            <button id="exportBtn" class="button secondary" type="button">导出 JSON</button>
-            <label class="button secondary file-label">
+            <button id="addBookBtn" class="small-button primary" type="button">+ 新增</button>
+            <button id="exportBtn" class="small-button" type="button">导出 JSON</button>
+            <label class="small-button file-label">
               导入 JSON
               <input id="importInput" type="file" accept="application/json" hidden />
             </label>
           </div>
         </div>
 
-        <div id="monthList" class="month-bar"></div>
-
-        <section class="book-grid" id="bookGrid" aria-live="polite"></section>
+        <div id="monthList" class="month-list"></div>
+        <section id="bookGrid" class="book-grid" aria-live="polite"></section>
       </main>
     </div>
 
@@ -60,14 +72,14 @@
             </label>
           </div>
 
-          <label>
+          <label class="note-field">
             读书笔记
             <textarea name="notes" rows="5" required></textarea>
           </label>
 
           <div class="modal-actions">
-            <button type="button" class="button secondary" data-close="true">取消</button>
-            <button type="submit" class="button primary">保存</button>
+            <button type="button" class="small-button" data-close="true">取消</button>
+            <button type="submit" class="small-button primary">保存</button>
           </div>
         </form>
       </div>
