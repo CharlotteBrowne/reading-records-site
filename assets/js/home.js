@@ -24,8 +24,7 @@ const defaultBooks = [
   { id: 'book-21', title: 'Night Market', author: 'Sara Bell', date: '2014-11-09', rating: 4, notes: '热闹中藏着一种悲伤。' },
   { id: 'book-22', title: 'The Winter House', author: 'S. Leung', date: '2014-11-25', rating: 4.5, notes: '有股能把人留住的力量。' },
   { id: 'book-23', title: 'One River', author: 'L. Watson', date: '2014-12-06', rating: 3.5, notes: '像旅行日志一样。' },
-  { id: 'book-24', title: 'Horizon in March', author: 'N. Hart', date: '2014-12-14', rating: 4, notes: '结尾非常轻盈。' },
-  { id: 'book-25', title: 'An Old Room', author: 'M. Duffy', date: '2015-01-11', rating: 4.5, notes: '多年以后仍觉得温暖。' }
+  { id: 'book-24', title: 'Horizon in March', author: 'N. Hart', date: '2014-12-14', rating: 4, notes: '结尾非常轻盈。' }
 ];
 
 function readBooks() {
@@ -41,9 +40,17 @@ function saveBooks(books) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
 }
 
-function getYears() {
-  const books = readBooks();
-  return Array.from(new Set(books.map(book => Number(new Date(book.date).getFullYear())))).sort((a, b) => b - a);
+function monthLabel(monthIndex) {
+  return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthIndex];
+}
+
+function starMarkup(rating) {
+  const filled = Math.round(rating);
+  let html = '';
+  for (let index = 1; index <= 5; index += 1) {
+    html += `<span class="star ${index <= filled ? 'filled' : ''}">★</span>`;
+  }
+  return html;
 }
 
 function buildCoverSvg(title, accentA, accentB) {
@@ -51,20 +58,19 @@ function buildCoverSvg(title, accentA, accentB) {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="220" height="300" viewBox="0 0 220 300">
       <defs>
-        <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+        <linearGradient id="bookGradient" x1="0" x2="1" y1="0" y2="1">
           <stop offset="0%" stop-color="${accentA}" />
           <stop offset="100%" stop-color="${accentB}" />
         </linearGradient>
       </defs>
       <rect width="220" height="300" rx="12" fill="#f5f1ea"/>
-      <rect x="12" y="12" width="196" height="276" rx="8" fill="url(#g)"/>
+      <rect x="12" y="12" width="196" height="276" rx="8" fill="url(#bookGradient)"/>
       <circle cx="58" cy="58" r="32" fill="rgba(255,255,255,0.12)" />
       <rect x="30" y="120" width="160" height="2" fill="rgba(255,255,255,0.5)"/>
       <text x="110" y="150" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="24" font-family="Georgia, serif" font-weight="600">${safeTitle}</text>
       <text x="110" y="212" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11" font-family="sans-serif" letter-spacing="4">READING</text>
     </svg>
   `;
-
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
@@ -86,125 +92,56 @@ function pickPalette(title) {
   return palette[index];
 }
 
-function formatDate(isoDate) {
+function formatDateInput(isoDate) {
   const date = new Date(isoDate + 'T00:00:00');
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function starMarkup(rating) {
-  const filled = Math.round(rating);
-  let markup = '';
-  for (let index = 1; index <= 5; index += 1) {
-    markup += `<span class="star ${index <= filled ? 'filled' : ''}">★</span>`;
-  }
-  return markup;
-}
-
-function monthName(number) {
-  return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][number - 1];
-}
-
-function openModal(book = null) {
-  const modal = document.getElementById('bookModal');
-  const form = document.getElementById('bookForm');
-  const modalTitle = document.getElementById('modalTitle');
-
-  if (!modal || !form) return;
-
-  form.dataset.mode = book ? 'edit' : 'create';
-  form.dataset.bookId = book ? book.id : '';
-  modalTitle.textContent = book ? '编辑书籍' : '新增书籍';
-
-  form.title.value = book ? book.title : '';
-  form.author.value = book ? book.author : '';
-  form.date.value = book ? formatDate(book.date) : '';
-  form.rating.value = book ? book.rating : 4;
-  form.notes.value = book ? book.notes : '';
-
-  modal.classList.remove('hidden');
-  modal.setAttribute('aria-hidden', 'false');
-}
-
-function closeModal() {
-  const modal = document.getElementById('bookModal');
-  if (!modal) return;
-  modal.classList.add('hidden');
-  modal.setAttribute('aria-hidden', 'true');
-  document.getElementById('bookForm').reset();
-}
-
-function renderReadingApp() {
-  const yearList = document.getElementById('yearList');
-  const monthList = document.getElementById('monthList');
-  const yearTitle = document.getElementById('yearTitle');
-  const bookGrid = document.getElementById('bookGrid');
+function renderYears() {
   const books = readBooks();
-  const years = getYears();
+  const uniqueYears = Array.from(new Set(books.map(book => Number(new Date(book.date).getFullYear())))).sort((a, b) => b - a);
+  const currentYear = uniqueYears[0] || 2014;
 
-  if (!years.length) {
-    yearTitle.textContent = '暂无阅读记录';
-    return;
-  }
+  const yearList = document.getElementById('yearList');
+  if (!yearList) return currentYear;
 
-  const currentYear = Number(new URLSearchParams(window.location.search).get('year')) || years[0];
-  let selectedYear = years.includes(currentYear) ? currentYear : years[0];
-
-  const yearButtons = years
-    .map(
-      year => `
-        <button class="year-button ${selectedYear === year ? 'active' : ''}" data-year="${year}" type="button">
-          <span>${year}</span>
-        </button>
-      `
-    )
-    .join('');
-
-  if (yearList) {
-    yearList.innerHTML = yearButtons;
-    yearList.querySelectorAll('.year-button').forEach(button => {
-      button.addEventListener('click', () => {
-        selectedYear = Number(button.dataset.year);
-        renderReadingApp();
-      });
-    });
-  }
-
-  yearTitle.textContent = `${selectedYear} 阅读清单`;
-
-  const monthButtons = Array.from({ length: 12 }, (_, index) => {
-    const monthNumber = index + 1;
-    const monthBooks = books.filter(book => new Date(book.date).getFullYear() === selectedYear && new Date(book.date).getMonth() === index);
-    const hasBooks = monthBooks.length > 0;
-    return `
-      <button class="month-button ${hasBooks ? 'has-books' : ''}" data-month="${monthNumber}" type="button">
-        <span>${monthName(monthNumber)}</span>
-        <small>${selectedYear}</small>
-      </button>
-    `;
+  const html = Array.from({ length: 12 }, (_, monthIndex) => {
+    const month = monthLabel(monthIndex);
+    const hasBooks = books.some(book => new Date(book.date).getFullYear() === currentYear && new Date(book.date).getMonth() === monthIndex);
+    return `<button type="button" class="year-month ${hasBooks ? 'active' : ''}" data-year="${currentYear}" data-month="${monthIndex + 1}"><strong>${month}</strong><span>${currentYear}</span></button>`;
   }).join('');
 
-  if (monthList) {
-    monthList.innerHTML = monthButtons;
-    monthList.querySelectorAll('.month-button').forEach(button => {
-      button.addEventListener('click', () => {
-        monthList.querySelectorAll('.month-button').forEach(el => el.classList.remove('active'));
-        button.classList.add('active');
-        renderBookGrid(selectedYear, Number(button.dataset.month), books);
-      });
+  yearList.innerHTML = html;
+  yearList.querySelectorAll('.year-month').forEach(button => {
+    button.addEventListener('click', () => {
+      yearList.querySelectorAll('.year-month').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      renderBookGrid(currentYear, Number(button.dataset.month), books);
     });
-  }
+  });
 
-  const firstMonthWithBooks = Array.from({ length: 12 }, (_, index) => index + 1).find(month => {
-    return books.some(book => new Date(book.date).getFullYear() === selectedYear && new Date(book.date).getMonth() === month - 1);
-  }) || 1;
+  return currentYear;
+}
 
-  const monthButtonsEls = monthList ? monthList.querySelectorAll('.month-button') : [];
-  const activeMonthButton = monthButtonsEls[firstMonthWithBooks - 1] || monthButtonsEls[0];
-  if (activeMonthButton) {
-    activeMonthButton.classList.add('active');
-  }
+function renderMonthButtons(selectedYear) {
+  const books = readBooks();
+  const monthList = document.getElementById('monthList');
+  if (!monthList) return;
 
-  renderBookGrid(selectedYear, Number(activeMonthButton?.dataset.month || firstMonthWithBooks), books);
+  const html = Array.from({ length: 12 }, (_, index) => {
+    const month = index + 1;
+    const monthBooks = books.filter(book => new Date(book.date).getFullYear() === selectedYear && new Date(book.date).getMonth() === index);
+    return `<button type="button" class="month-button ${monthBooks.length ? 'active' : ''}" data-month="${month}">${monthLabel(index)}</button>`;
+  }).join('');
+
+  monthList.innerHTML = html;
+  monthList.querySelectorAll('.month-button').forEach(button => {
+    button.addEventListener('click', () => {
+      monthList.querySelectorAll('.month-button').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      renderBookGrid(selectedYear, Number(button.dataset.month), books);
+    });
+  });
 }
 
 function renderBookGrid(selectedYear, selectedMonth, books) {
@@ -225,7 +162,7 @@ function renderBookGrid(selectedYear, selectedMonth, books) {
       const palette = pickPalette(book.title);
       const cover = buildCoverSvg(book.title, palette[0], palette[1]);
       return `
-        <article class="book-card" data-book-id="${book.id}">
+        <article class="book-card">
           <div class="book-cover-box">
             <img src="${cover}" alt="${book.title} cover" />
           </div>
@@ -234,13 +171,13 @@ function renderBookGrid(selectedYear, selectedMonth, books) {
             <p class="author">${book.author}</p>
             <div class="meta-row">
               <span>${new Date(book.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}</span>
-              <span>${book.rating.toFixed(1)} / 5</span>
+              <span>${Number(book.rating).toFixed(1)} / 5</span>
             </div>
             <div class="rating-row">${starMarkup(book.rating)}</div>
             <p class="notes">${book.notes}</p>
             <div class="card-actions">
-              <button type="button" class="mini-button edit" data-action="edit" data-book-id="${book.id}">编辑</button>
-              <button type="button" class="mini-button delete" data-action="delete" data-book-id="${book.id}">删除</button>
+              <button type="button" class="mini-button edit-btn" data-book-id="${book.id}">编辑</button>
+              <button type="button" class="mini-button delete-btn" data-book-id="${book.id}">删除</button>
             </div>
           </div>
         </article>
@@ -248,59 +185,84 @@ function renderBookGrid(selectedYear, selectedMonth, books) {
     })
     .join('');
 
-  grid.querySelectorAll('[data-action="edit"]').forEach(button => {
+  grid.querySelectorAll('.edit-btn').forEach(button => {
     button.addEventListener('click', () => {
       const book = readBooks().find(item => item.id === button.dataset.bookId);
       openModal(book);
     });
   });
 
-  grid.querySelectorAll('[data-action="delete"]').forEach(button => {
+  grid.querySelectorAll('.delete-btn').forEach(button => {
     button.addEventListener('click', () => {
-      const bookId = button.dataset.bookId;
-      const booksAfterDelete = readBooks().filter(item => item.id !== bookId);
-      saveBooks(booksAfterDelete);
-      renderReadingApp();
+      const currentBooks = readBooks().filter(item => item.id !== button.dataset.bookId);
+      saveBooks(currentBooks);
+      renderApp();
     });
   });
 }
 
-function handleFormSubmit(event) {
+function renderApp() {
+  const currentYear = renderYears();
+  renderMonthButtons(currentYear);
+  renderBookGrid(currentYear, 1, readBooks());
+}
+
+function openModal(book = null) {
+  const modal = document.getElementById('bookModal');
+  const form = document.getElementById('bookForm');
+  const title = document.getElementById('modalTitle');
+  if (!modal || !form || !title) return;
+
+  form.dataset.mode = book ? 'edit' : 'create';
+  form.dataset.bookId = book ? book.id : '';
+  title.textContent = book ? '编辑书籍' : '新增书籍';
+
+  form.title.value = book ? book.title : '';
+  form.author.value = book ? book.author : '';
+  form.date.value = book ? formatDateInput(book.date) : '';
+  form.rating.value = book ? book.rating : 4;
+  form.notes.value = book ? book.notes : '';
+
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeModal() {
+  const modal = document.getElementById('bookModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function handleSubmit(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const books = readBooks();
-  const title = form.title.value.trim();
-  const author = form.author.value.trim();
-  const date = form.date.value;
-  const rating = Number(form.rating.value);
-  const notes = form.notes.value.trim();
-
-  if (!title || !author || !date || !notes) return;
-
-  const nextBook = {
+  const payload = {
     id: form.dataset.bookId || `book-${Date.now()}`,
-    title,
-    author,
-    date,
-    rating,
-    notes,
+    title: form.title.value.trim(),
+    author: form.author.value.trim(),
+    date: form.date.value,
+    rating: Number(form.rating.value),
+    notes: form.notes.value.trim()
   };
 
+  if (!payload.title || !payload.author || !payload.date || !payload.notes) {
+    return;
+  }
+
   if (form.dataset.mode === 'edit') {
-    const updatedBooks = books.map(book => (book.id === nextBook.id ? nextBook : book));
-    saveBooks(updatedBooks);
+    saveBooks(books.map(item => item.id === payload.id ? payload : item));
   } else {
-    saveBooks([nextBook, ...books]);
+    saveBooks([payload, ...books]);
   }
 
   closeModal();
-  renderReadingApp();
+  renderApp();
 }
 
 function exportBooks() {
-  const books = readBooks();
-  const payload = JSON.stringify(books, null, 2);
-  const blob = new Blob([payload], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(readBooks(), null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -310,59 +272,39 @@ function exportBooks() {
 }
 
 function importBooks(event) {
-  const [file] = event.target.files || [];
+  const file = event.target.files?.[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result);
-      if (!Array.isArray(parsed)) {
-        throw new Error('Invalid JSON format');
-      }
+      if (!Array.isArray(parsed)) throw new Error('invalid');
       saveBooks(parsed);
-      renderReadingApp();
+      renderApp();
     } catch (error) {
-      window.alert('导入失败：文件内容不是有效的 JSON 数组。');
+      alert('导入失败：文件内容不是有效的 JSON 数组');
     }
   };
-
   reader.readAsText(file);
   event.target.value = '';
 }
 
-function setupReadingPage() {
-  const addBookBtn = document.getElementById('addBookBtn');
-  const exportBtn = document.getElementById('exportBtn');
-  const importInput = document.getElementById('importInput');
-  const form = document.getElementById('bookForm');
-  const modal = document.getElementById('bookModal');
+function initReadingPage() {
+  if (!document.getElementById('bookGrid')) return;
 
-  if (addBookBtn) {
-    addBookBtn.addEventListener('click', () => openModal());
-  }
+  renderApp();
 
-  if (exportBtn) {
-    exportBtn.addEventListener('click', exportBooks);
-  }
+  document.getElementById('addBookBtn')?.addEventListener('click', () => openModal());
+  document.getElementById('exportBtn')?.addEventListener('click', exportBooks);
+  document.getElementById('importInput')?.addEventListener('change', importBooks);
+  document.getElementById('bookForm')?.addEventListener('submit', handleSubmit);
 
-  if (importInput) {
-    importInput.addEventListener('change', importBooks);
-  }
-
-  if (form) {
-    form.addEventListener('submit', handleFormSubmit);
-  }
-
-  if (modal) {
-    modal.addEventListener('click', event => {
-      if (event.target instanceof HTMLElement && event.target.dataset.close === 'true') {
-        closeModal();
-      }
-    });
-  }
-
-  renderReadingApp();
+  document.getElementById('bookModal')?.addEventListener('click', event => {
+    if (event.target instanceof HTMLElement && event.target.dataset.close === 'true') {
+      closeModal();
+    }
+  });
 }
 
-window.addEventListener('DOMContentLoaded', setupReadingPage);
+document.addEventListener('DOMContentLoaded', initReadingPage);
